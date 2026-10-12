@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fix the World: 17 Goals</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f3f8f4;--card:#fff;--ink:#14301f;--mut:#5b7566;--acc:#1f9d55;--bad:#d64545;--gray:#98a59d;--sea:#cfe6f3;--land:#d6ded8;--gold:#e8a600}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1a13;--card:#17271e;--ink:#e8f3ec;--mut:#9ab5a5;--acc:#3ecf7c;--sea:#12303f;--land:#2a3c31;--gray:#55655b}}
+:root[data-theme="dark"]{--bg:#0e1a13;--card:#17271e;--ink:#e8f3ec;--mut:#9ab5a5;--acc:#3ecf7c;--sea:#12303f;--land:#2a3c31;--gray:#55655b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:600px;margin:0 auto;padding:14px}
+h1{margin:4px 0;font-size:24px}h2{margin:6px 0}
+p{line-height:1.45}.mut{color:var(--mut);font-size:14px}
+.hud{display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:600;gap:8px}
+.bar{height:10px;background:var(--land);border-radius:9px;overflow:hidden;margin:8px 0 12px}
+.bar i{display:block;height:100%;background:var(--acc);width:0;transition:width .5s}
+.map{background:var(--sea);border-radius:16px;position:relative;aspect-ratio:2.2/1;overflow:hidden;touch-action:none;cursor:grab}.mi{position:absolute;inset:0;transform-origin:0 0}.zoom{position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:4px;z-index:3}.zoom button{width:32px;height:32px;border-radius:8px;border:0;background:var(--card);color:var(--ink);font-size:18px;cursor:pointer}
+.map svg{position:absolute;inset:0;width:100%;height:100%}
+.map g{transition:fill .6s}
+.spot{position:absolute;transform:translate(-50%,-50%) scale(calc(1/var(--z,1)));width:30px;height:30px;border-radius:50%;border:2px solid #fff;background:var(--bad);color:#fff;font-weight:700;font-size:12px;cursor:pointer;padding:0;animation:pulse 1.8s infinite}
+.spot.done{background:var(--acc);animation:glow 2s infinite;font-size:15px}@keyframes glow{50%{box-shadow:0 0 14px 4px rgba(62,207,124,.6)}}.lk{stroke:var(--gold);stroke-width:1.5;stroke-dasharray:5 4;vector-effect:non-scaling-stroke;animation:dash 1s linear infinite}@keyframes dash{to{stroke-dashoffset:-9}}
+@keyframes pulse{50%{box-shadow:0 0 0 8px rgba(214,69,69,.28)}}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:12px}
+.row{background:var(--card);border-radius:12px;padding:9px 10px;font-size:13px;cursor:pointer;border:0;color:var(--ink);text-align:left;font-family:inherit}
+.row b{display:block;color:var(--acc);font-size:12px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.tile{background:var(--card);border:2px solid transparent;border-radius:12px;padding:12px 6px;text-align:center;font-size:14px;min-height:58px;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-bottom:10px;width:100%;color:var(--ink);font-family:inherit;transition:transform .15s}
+.tile.p{border-color:var(--bad)}.tile.s{border-color:var(--acc)}
+.tile.sel{background:var(--ink);color:var(--bg);transform:scale(1.04)}
+.tile.ok{background:var(--acc);color:#fff;border-color:var(--acc);pointer-events:none}
+.tile.no{animation:shake .3s;border-color:var(--bad)}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.btn{background:var(--acc);color:#fff;border:0;border-radius:12px;padding:13px 20px;font-size:16px;font-weight:600;cursor:pointer;width:100%;margin-top:8px}
+.ghost{background:transparent;color:var(--mut);border:0;font-size:14px;cursor:pointer;padding:6px 0}
+.pop{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:5}
+.pop.on{display:flex}
+.box{background:var(--card);border-radius:18px;padding:20px;max-width:420px;width:100%}
+.tag{display:inline-block;background:var(--acc);color:#fff;border-radius:8px;padding:2px 8px;font-size:12px;font-weight:700}
+.fact{background:var(--bg);border-radius:10px;padding:10px;margin:10px 0;font-size:14px}
+.hide{display:none}
+.stars{font-size:26px;letter-spacing:4px;color:var(--gold)}
+.card{background:var(--card);border-radius:14px;padding:16px;margin:12px 0}
+.opt{display:block;width:100%;text-align:left;background:var(--bg);border:2px solid transparent;border-radius:12px;padding:13px;margin-top:8px;font-size:15px;color:var(--ink);cursor:pointer;font-family:inherit}
+.opt.good{background:var(--acc);color:#fff}.opt.bad{border-color:var(--bad);animation:shake .3s}
+.combo{color:var(--gold)}
+</style></head><body>
+<div class="wrap">
+<div id="mapScreen">
+  <div class="hud"><h1 id="ttl">🌍 Fix the World</h1><span>⭐ <span id="score">0</span> <button class="ghost" id="snd">🔊</button></span></div>
+  <p class="mut" id="intro">17 goals, 17 broken places. Match problems to solutions, then make a real-world decision. The land turns green as you fix it.</p>
+  <div class="bar"><i id="prog"></i></div>
+  <div class="card" id="daily" style="cursor:pointer;margin:0 0 8px"></div><div id="badges" class="mut" style="margin-bottom:10px"></div>
+  <select id="lang" class="opt" style="margin:0 0 8px"><option value="en">🌐 English</option><option value="es">Español</option><option value="hi">हिन्दी</option><option value="fr">Français</option></select>
+  <div class="grid" style="margin:0 0 10px"><button class="row" id="bStory">📖 2050 Story</button><button class="row" id="bCalc">🧮 My Impact</button><button class="row" id="bCls">👥 Class Mode</button></div>
+  <div class="map" id="map"><div class="mi" id="mi"><svg viewBox="0 0 360 136" preserveAspectRatio="none"><g stroke="#fff" stroke-opacity=".3" stroke-width=".4" fill="none"><path d="M0 78H360M0 48H360M0 108H360M60 0V136M120 0V136M180 0V136M240 0V136M300 0V136"/></g><g id="land" style="stroke:var(--bg);stroke-width:.6"><path d="M12 12L40 8L60 8L85 6L100 10L118 18L125 28L113 33L104 40L99 48L100 53L90 49L83 52L83 60L92 62L97 69L102 70L94 65L75 56L70 54L63 46L56 38L56 30L45 20L30 18L15 18Z"/><path d="M130 16L145 6L165 4L160 18L145 28L135 24Z"/><path d="M102 70L120 68L130 78L145 84L140 100L122 116L112 132L106 126L108 108L99 84L100 76Z"/><path d="M171 41L171 35L178 31L184 26L190 21L185 16L195 9L210 7L240 9L280 1L320 6L350 14L340 23L320 30L310 43L302 48L301 56L288 57L286 68L280 76L278 62L272 56L260 66L253 58L247 53L237 53L230 48L224 66L219 56L215 48L216 42L206 41L202 38L192 34L183 35L179 40L174 42Z"/><path d="M163 57L170 48L174 42L190 41L212 47L223 66L231 66L220 81L220 93L213 104L200 113L195 105L192 90L189 74L172 74L163 64Z"/><path d="M294 96L310 90L322 88L333 104L327 116L315 112L295 112Z"/><ellipse cx="227" cy="97" rx="3" ry="7"/><ellipse cx="290" cy="84" rx="11" ry="2.5"/><ellipse cx="294" cy="78" rx="5" ry="4"/><ellipse cx="318" cy="42" rx="2.5" ry="7"/><ellipse cx="178" cy="24" rx="2.5" ry="4"/><ellipse cx="302" cy="65" rx="2" ry="4"/></g><g id="links"></g></svg></div><div class="zoom"><button id="zi">+</button><button id="zo">−</button></div></div>
+  <div class="card hide" id="info"></div>
+  <div class="grid" id="list"></div>
+  <button class="btn" id="share">📤 Share my score card</button>
+  <button class="ghost" id="reset">Reset progress</button>
+</div>
+
+<div id="toolScreen" class="hide"><button class="ghost" id="tback">← Map</button><div id="toolBody"></div></div>
+
+<div id="playScreen" class="hide">
+  <div class="hud"><button class="ghost" id="back">← Map</button><span class="mut">Round <span id="rnd">1</span>/2 · ⭐ <span id="score2">0</span> · <span class="combo" id="combo"></span></span></div>
+  <span class="tag" id="sdgTag"></span>
+  <h2 id="ptitle"></h2>
+  <div id="matchBox">
+    <p class="mut">Tap a <span style="color:var(--bad)">problem</span>, then its <span style="color:var(--acc)">solution</span>. Chain correct matches for combo points.</p>
+    <div class="cols"><div id="colP"></div><div id="colS"></div></div>
+  </div>
+  <div id="quizBox" class="hide">
+    <div class="card"><b>🧭 Decision time</b><p id="q"></p><div id="opts"></div><p class="mut" id="why"></p></div>
+  </div>
+</div>
+
+<div id="endScreen" class="hide" style="text-align:center">
+  <h1>🎉 You fixed the world!</h1>
+  <p>All 17 Sustainable Development Goals are green.</p>
+  <div class="stars" id="final"></div>
+  <p class="mut">Pledge: pick one tip you learned and do it this week.</p>
+  <button class="btn" id="share2">📤 Share score card</button><button class="btn" id="again" style="background:var(--mut)">Play again</button>
+</div>
+</div>
+
+<div class="pop" id="pop"><div class="box">
+  <span class="tag" id="rTag"></span>
+  <h2 id="rTitle"></h2>
+  <div class="fact">📊 <span id="rFact"></span></div>
+  <div class="fact">💡 <b>You can help:</b> <span id="rTip"></span></div>
+  <div class="fact" id="rBA"></div><div class="fact hide" id="rBonus"></div><div class="stars" id="rStars"></div>
+  <button class="btn" id="rNext">Back to map</button>
+</div></div>
+
+<div class="pop" id="cp"><div class="box" style="text-align:center"><img id="cimg" alt="Score card" style="width:100%;border-radius:12px"><p class="mut">Press and hold the image to save it, or take a screenshot.</p><button class="btn" id="cshare">Share</button><button class="ghost" id="cclose">Close</button></div></div>
+<script>
+// [sdg, name, place, x, y, fact, tip, pairs, [question, correct option, wrong1, wrong2, explanation]]
+const L=[
+[1,"No Poverty","Haiti",18,30,"Around 700 million people live in extreme poverty.","Buy from fair-trade and local small businesses.",[["No income","Micro-loan"],["No skills","Job training"],["No safety net","Social protection"],["No savings","Community savings group"]],["A village family earns little from farming. Best first step?","Small loan plus business training","One-time cash gift only","Tell them to move away","Skills and capital build lasting income."]],
+[2,"Zero Hunger","India",32,40,"Roughly one third of all food produced is lost or wasted.","Plan meals and use leftovers.",[["Failed crops","Drought-proof seeds"],["Food spoils","Cold storage"],["Wasted food","Community fridge"],["Empty plates","School meals"]],["A harvest rots before reaching markets. What helps most?","Cold storage and better roads","Plant even more crops","Ban all sales","Cutting losses feeds people without new land."]],
+[3,"Good Health","Nigeria",50,52,"Vaccines prevent millions of deaths every year.","Wash hands with soap and keep vaccinations current.",[["Mosquitoes","Bed nets"],["Far-away clinic","Mobile clinic"],["Deadly disease","Vaccines"],["Dirty hands","Soap and water"]],["A clinic has a huge queue and too few nurses.","Train community health workers","Close the clinic","Raise prices","Local trained workers extend care."]],
+[4,"Quality Education","Bangladesh",80,50,"Over 250 million children are out of school worldwide.","Donate books or tutor a younger student.",[["No school","Build a school"],["No books","Digital library"],["No teachers","Teacher training"],["Girls kept home","Scholarships"]],["Girls skip school because there are no toilets.","Build safe, private school toilets","Ignore it","Shorten the school year","Safe facilities keep girls in class."]],
+[5,"Gender Equality","Nepal",66,34,"Women do about 2.5 times more unpaid care work than men.","Share housework equally and back equal pay.",[["Pay gap","Transparent pay"],["Child marriage","Law enforcement"],["No voice","Women in leadership"],["Unpaid care","Childcare support"]],["A firm pays women less for the same job.","Publish pay data and close gaps","Hire fewer women","Keep it quiet","Transparency drives fair pay."]],
+[6,"Clean Water","Kenya",56,64,"About 2 billion people lack safely managed drinking water.","Turn off the tap while brushing: saves about 6 L a day.",[["Dirty water","Water filter"],["Leaky pipe","Repair crew"],["Dry well","Rainwater tank"],["Dripping tap","Fix the washer"]],["A town's well water is contaminated.","Treat the water and fix the source","Dig the same well deeper","Drink soda instead","Fixing the source protects everyone."]],
+[7,"Clean Energy","Uganda",72,28,"Around 700 million people still have no electricity.","Switch to LED bulbs and unplug idle devices.",[["No power grid","Solar mini-grid"],["Smoky stove","Clean cookstove"],["Wasted energy","LED bulbs"],["Fossil fuel","Wind power"]],["A remote village has no electricity.","Install solar mini-grids","Build a coal plant","Wait 20 years","Solar is fast and needs no grid."]],
+[8,"Decent Work","Bangladesh",40,24,"About 160 million children are in child labour.","Check labels and buy ethically made products.",[["Unsafe factory","Safety inspections"],["Child labour","School access"],["Unpaid wages","Labour rights"],["Unemployment","Apprenticeships"]],["Factory workers face unsafe conditions.","Enforce safety rules and fair wages","Cut their breaks","Hire cheaper workers","Safe, fair work is a right."]],
+[9,"Industry and Innovation","Rwanda",88,36,"Over 2 billion people are still offline.","Share your skills: teach someone to use the internet.",[["No internet","Mobile networks"],["Broken roads","Resilient roads"],["Old factory","Clean tech"],["No startups","Innovation hubs"]],["Rural farmers cannot reach buyers.","Mobile networks and market apps","Send faxes","Do nothing","Connectivity opens markets."]],
+[10,"Reduced Inequalities","Brazil",26,72,"Inequality within many countries has grown in recent decades.","Speak up against discrimination you see.",[["Excluded groups","Equal rights laws"],["No ramps","Accessible design"],["Language barrier","Translation services"],["Unequal pay","Fair wages"]],["Wheelchair users cannot enter public offices.","Add ramps and accessible design","Tell them to stay home","Build more stairs","Inclusive design serves everyone."]],
+[11,"Sustainable Cities","Indonesia",48,34,"More than half of people live in cities, heading toward 70% by 2050.","Walk, cycle or take transit for short trips.",[["Traffic jams","Metro and buses"],["Slums","Affordable housing"],["Heat island","Green roofs"],["Air pollution","Electric transport"]],["City air is choked by traffic.","Transit, bike lanes, electric buses","More highways","Ban walking","Moving people, not cars, cleans the air."]],
+[12,"Responsible Consumption","Ghana",16,44,"Over 1 billion tonnes of food are wasted each year.","Repair, reuse, then recycle. Buy only what you need.",[["Throwaway phone","Repair it"],["Plastic bags","Reusable bags"],["Food scraps","Compost"],["Old clothes","Donate or swap"]],["Your phone breaks. What is best?","Repair it or recycle e-waste","Bin it","Bury it","Repair and recycling save resources."]],
+[13,"Climate Action","Brazil",30,62,"The last decade was the warmest on record.","Walk, bike or take transit one trip a week.",[["Forests cut down","Plant trees"],["Coal power","Solar panels"],["Car traffic","Bike lanes"],["Burning trash","Recycling"]],["Your city floods more each year.","Cut emissions and add green spaces","Ignore forecasts","Burn more fuel","Cutting emissions and soaking up water both help."]],
+[14,"Life Below Water","Philippines",10,62,"About 11 million tonnes of plastic enter the ocean yearly.","Skip single-use plastic, especially straws and bottles.",[["Plastic waste","Cleanup and bans"],["Overfishing","Catch limits"],["Dying reef","Marine reserves"],["Oil spill","Fast response"]],["Nets are emptying a reef.","Catch limits and protected zones","Fish harder","Dump waste","Rest periods let fish recover."]],
+[15,"Life on Land","Madagascar",44,70,"Around 10 million hectares of forest are lost each year.","Choose FSC-certified paper and wood.",[["Deforestation","Reforestation"],["Poaching","Wildlife rangers"],["Soil erosion","Cover crops"],["Desert spread","Native planting"]],["Hillsides lost their trees and soil washes away.","Replant native trees","Pave the hills","Cut the rest","Roots hold soil together."]],
+[16,"Peace and Justice","Colombia",62,48,"Hundreds of millions of children have never had their birth registered.","Stay informed and vote in local elections.",[["Corruption","Open budgets"],["No ID","Birth registration"],["Violence","Peacebuilding"],["No lawyer","Free legal aid"]],["A community cannot reach fair courts.","Free legal aid and open courts","Allow bribes","Close the courts","Access to justice builds trust."]],
+[17,"Partnerships","Global",92,80,"Progress on every goal depends on shared funding, data and technology.","Join or support a local community project.",[["Lack of funds","Aid and investment"],["Data gaps","Open data"],["Tech gap","Technology sharing"],["Solo effort","Global alliances"]],["Countries face the same crisis.","Share data, funding and technology","Hide their data","Only compete","Shared problems need shared solutions."]]
+];
+const GEO=[[19,-72],[15,48,"Yemen"],[9,8],[24,90],[34,66,"Afghanistan"],[0,38],[31,-7,"Morocco"],[39,35,"Turkey"],[37,127,"South Korea"],[-30,25,"South Africa"],[-6,107],[51,10,"Germany"],[-5,-60],[13,122],[-19,47],[4,-74],[40.7,-74,"New York"]];
+GEO.forEach((g,i)=>{L[i][3]=(g[1]+180)/3.6;L[i][4]=(78-g[0])/1.36;if(g[2])L[i][2]=g[2]});
+let ds={last:"",streak:0,maxC:0},t0=0,lastC,done={},stars={},score=0,cur=null,sel=null,miss=0,matched=0,combo=0,mute=false,ac;
+const $=id=>document.getElementById(id);
+const sh=a=>[...a].sort(()=>Math.random()-.5);
+const st={get(){try{return JSON.parse(localStorage.getItem("ftw")||"null")}catch(e){return null}},set(){try{localStorage.setItem("ftw",JSON.stringify({done,stars,score,ds}))}catch(e){}}};
+const s0=st.get();if(s0){done=s0.done||{};stars=s0.stars||{};score=s0.score||0;ds=s0.ds||ds}
+function beep(f,d){if(mute)return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;g.gain.value=.08;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
+function show(id){["mapScreen","playScreen","endScreen","toolScreen"].forEach(s=>$(s).classList.toggle("hide",s!==id))}
+function setScore(n){score+=n;$("score").textContent=score;$("score2").textContent=score}
+function drawMap(){
+  document.querySelectorAll(".spot").forEach(e=>e.remove());$("list").innerHTML="";
+  L.forEach((l,i)=>{
+    const b=document.createElement("button");b.className="spot"+(done[i]?" done":"");
+    b.style.left=l[3]+"%";b.style.top=l[4]+"%";b.textContent=done[i]?IC[i]:l[0];b.title=l[2];b.onclick=()=>{if(!moved)info(i)};$("mi").appendChild(b);
+    const r=document.createElement("button");r.className="row";
+    r.innerHTML=`SDG ${l[0]}: ${l[1]}<b>${done[i]?"★".repeat(stars[i]):l[2]}</b>`;r.onclick=()=>play(i);$("list").appendChild(r);
+  });
+  const n=Object.keys(done).length,p=n/L.length*100;
+  $("prog").style.width=p+"%";dash();$("land").style.fill="color-mix(in srgb, var(--acc) "+Math.round(p*.7)+"%, var(--land))";
+  $("score").textContent=score;$("score2").textContent=score;
+}
+function play(i){
+  cur=i;t0=Date.now();sel=null;miss=0;matched=0;combo=0;const l=L[i];
+  $("sdgTag").textContent="SDG "+l[0];$("ptitle").textContent=l[1]+": "+l[2];$("rnd").textContent=1;$("combo").textContent="";
+  $("colP").innerHTML="";$("colS").innerHTML="";
+  sh(l[7].map((p,k)=>[p[0],k])).forEach(([t,k])=>mk("colP","p",t,k));
+  sh(l[7].map((p,k)=>[p[1],k])).forEach(([t,k])=>mk("colS","s",t,k));
+  $("matchBox").classList.remove("hide");$("quizBox").classList.add("hide");show("playScreen");
+}
+function mk(col,type,text,k){const b=document.createElement("button");b.className="tile "+type;b.textContent=text;b.onclick=()=>tap(b,type,k);$(col).appendChild(b)}
+function tap(b,type,k){
+  if(type==="p"){document.querySelectorAll(".tile.p.sel").forEach(e=>e.classList.remove("sel"));b.classList.add("sel");sel={b,k};beep(440,.05);return}
+  if(!sel)return;
+  if(sel.k===k){sel.b.classList.remove("sel");sel.b.classList.add("ok");b.classList.add("ok");sel=null;matched++;combo++;if(combo>ds.maxC)ds.maxC=combo;
+    setScore(100+(combo-1)*50);beep(520+combo*80,.12);$("combo").textContent=combo>1?"🔥 x"+combo:"";
+    if(matched===4)setTimeout(quiz,600)}
+  else{miss++;combo=0;$("combo").textContent="";b.classList.add("no");beep(160,.2);setTimeout(()=>b.classList.remove("no"),300)}
+}
+function quiz(){
+  const q=L[cur][8];$("rnd").textContent=2;$("matchBox").classList.add("hide");$("quizBox").classList.remove("hide");
+  $("q").textContent=q[0];$("why").textContent="";$("opts").innerHTML="";
+  sh([[q[1],1],[q[2],0],[q[3],0]]).forEach(([t,ok])=>{
+    const b=document.createElement("button");b.className="opt";b.textContent=t;
+    b.onclick=()=>{
+      if(ok){b.classList.add("good");$("why").textContent="✅ "+q[4];setScore(200);beep(700,.2);document.querySelectorAll(".opt").forEach(o=>o.onclick=null);setTimeout(finish,1400)}
+      else{miss++;b.classList.add("bad");b.onclick=null;beep(160,.2);$("why").textContent="Not quite. Try another option."}
+    };$("opts").appendChild(b);
+  });
+}
+function finish(){
+  const l=L[cur],s=miss===0?3:miss<=3?2:1;if(!done[cur]||s>(stars[cur]||0))stars[cur]=s;const had=done[cur];done[cur]=true;const ex=bonus(had);st.set();
+  $("rTag").textContent="SDG "+l[0];$("rTitle").textContent=l[2]+" is fixed! ✅";
+  $("rFact").textContent=l[5];$("rTip").textContent=l[6];$("rStars").textContent="★".repeat(s)+"☆".repeat(3-s);
+  const p0=l[7][0];$("rBA").innerHTML=`🔴 Before: ${p0[0]}<br>🟢 After: ${p0[1]}`;$("rBonus").innerHTML=ex;$("rBonus").classList.toggle("hide",!ex);$("pop").classList.add("on");
+}
+$("rNext").onclick=()=>{$("pop").classList.remove("on");drawMap();
+  if(Object.keys(done).length===L.length){const t=Object.values(stars).reduce((a,b)=>a+b,0);$("final").textContent="★ "+t+" / "+L.length*3+" · "+score+" pts";show("endScreen")}else show("mapScreen")};
+$("back").onclick=()=>{show("mapScreen")};
+$("again").onclick=()=>{done={};stars={};score=0;st.set();show("mapScreen");drawMap()};
+$("reset").onclick=$("again").onclick;
+$("snd").onclick=()=>{mute=!mute;$("snd").textContent=mute?"🔇":"🔊"};
+let z=1,px=0,py=0,moved=false,drag=null;
+function view(){const m=$("map"),w=m.clientWidth,h=m.clientHeight;px=Math.min(0,Math.max(w*(1-z),px));py=Math.min(0,Math.max(h*(1-z),py));$("mi").style.transform=`translate(${px}px,${py}px) scale(${z})`;m.style.setProperty("--z",z)}
+function zoom(f,cx,cy){const m=$("map");cx=cx??m.clientWidth/2;cy=cy??m.clientHeight/2;const nz=Math.min(5,Math.max(1,z*f)),r=nz/z;px=cx-(cx-px)*r;py=cy-(cy-py)*r;z=nz;view()}
+$("zi").onclick=()=>zoom(1.5);$("zo").onclick=()=>zoom(1/1.5);
+$("map").addEventListener("wheel",e=>{e.preventDefault();const r=$("map").getBoundingClientRect();zoom(e.deltaY<0?1.2:1/1.2,e.clientX-r.left,e.clientY-r.top)},{passive:false});
+$("map").onpointerdown=e=>{drag={x:e.clientX,y:e.clientY,px,py};moved=false};
+window.onpointermove=e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>6)moved=true;if(moved){px=drag.px+dx;py=drag.py+dy;view()}};
+window.onpointerup=()=>{drag=null;setTimeout(()=>moved=false,0)};
+const IC=["🏘️","🌾","🏥","🏫","⚖️","💧","☀️","🏭","💡","🤝","🏙️","♻️","🌳","🐟","🌲","🕊️","🌐"];
+const LINKS=[[6,3],[6,2],[7,13],[4,5],[4,8],[1,8],[8,10],[11,12],[12,13],[13,14],[13,15],[16,17],[9,11],[2,12]];
+const today=new Date().toISOString().slice(0,10),yday=new Date(Date.now()-864e5).toISOString().slice(0,10),daily=Math.floor(Date.now()/864e5)%17;
+function drawLinks(){let h="";LINKS.forEach(([a,b])=>{if(done[a-1]&&done[b-1]){const A=L[a-1],B=L[b-1];h+=`<line x1="${A[3]*3.6}" y1="${A[4]*1.36}" x2="${B[3]*3.6}" y2="${B[4]*1.36}" class="lk"/>`}});$("links").innerHTML=h}
+function badges(){const n=Object.keys(done).length,s3=Object.values(stars).filter(x=>x===3).length,B=[];
+ if(n>=1)B.push("🌱 First Fix");if(done[5]&&stars[5]===3)B.push("💧 Water Hero");if(done[12]&&stars[12]===3)B.push("🌍 Climate Champion");
+ if(ds.maxC>=4)B.push("🔥 Combo Master");if(s3>=5)B.push("⭐ Perfectionist");if(n>=9)B.push("🗺️ Halfway");if(n===17)B.push("🏆 World Fixer");if(ds.streak>=3)B.push("📆 3-Day Streak");return B}
+function dash(){const d=L[daily],sk=(ds.last===today||ds.last===yday)?ds.streak:0;
+ $("daily").innerHTML=`📆 <b>Daily challenge:</b> SDG ${d[0]} ${d[1]} (${d[2]}) · +300 pts ${ds.last===today?"✅ done":""}<br><span class="mut">🔥 Streak: ${sk} day${sk===1?"":"s"}</span>`;
+ $("daily").onclick=()=>play(daily);
+ const B=badges();$("badges").textContent=B.length?"🏅 "+B.join(" · "):"🏅 Earn badges by fixing goals";drawLinks()}
+function bonus(had){let t="";
+ const secs=Math.round((Date.now()-t0)/1000),tb=Math.max(0,60-secs)*3;
+ if(!had&&tb){setScore(tb);t+=`⏱️ Speed bonus +${tb} (${secs}s)<br>`}
+ const n=LINKS.filter(k=>k.includes(L[cur][0])&&done[k[0]-1]&&done[k[1]-1]).length;
+ if(!had&&n){setScore(150*n);t+=`🔗 Link bonus +${150*n}: connected to ${n} fixed goal${n>1?"s":""}<br>`}
+ if(cur===daily&&ds.last!==today){ds.streak=ds.last===yday?ds.streak+1:1;ds.last=today;setScore(300);t+=`📆 Daily challenge +300 · 🔥 ${ds.streak}-day streak<br>`}
+ return t}
+function makeCard(){const c=document.createElement("canvas");c.width=c.height=1080;const x=c.getContext("2d");
+ const g=x.createLinearGradient(0,0,0,1080);g.addColorStop(0,"#0e5a34");g.addColorStop(1,"#1f9d55");x.fillStyle=g;x.fillRect(0,0,1080,1080);
+ x.fillStyle="#fff";x.textAlign="center";x.font="bold 76px system-ui,sans-serif";x.fillText("🌍 Fix the World",540,150);
+ const n=Object.keys(done).length;x.font="bold 150px system-ui,sans-serif";x.fillText(score+" pts",540,360);
+ x.font="48px system-ui,sans-serif";x.fillText(n+" / 17 goals fixed · ★ "+Object.values(stars).reduce((a,b)=>a+b,0),540,440);
+ for(let i=0;i<17;i++){const cx=130+(i%6)*164,cy=560+Math.floor(i/6)*130;x.beginPath();x.arc(cx,cy,48,0,7);x.fillStyle=done[i]?"#fff":"rgba(255,255,255,.2)";x.fill();x.fillStyle=done[i]?"#1f9d55":"#fff";x.font="bold 40px system-ui,sans-serif";x.fillText(i+1,cx,cy+14)}
+ x.fillStyle="#fff";x.font="34px system-ui,sans-serif";x.fillText(badges().slice(0,3).join("   "),540,950);
+ x.font="32px system-ui,sans-serif";x.fillText("Can you fix all 17 goals?",540,1020);return c}
+function showCard(){lastC=makeCard();$("cimg").src=lastC.toDataURL();$("cp").classList.add("on")}
+$("share").onclick=showCard;
+$("share2").onclick=showCard;
+$("cclose").onclick=()=>$("cp").classList.remove("on");
+$("cshare").onclick=()=>{lastC.toBlob(async b=>{try{const f=new File([b],"fix-the-world.png",{type:"image/png"}),m="I scored "+score+" in Fix the World!";if(navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({files:[f],text:m});else if(navigator.share)await navigator.share({text:m})}catch(e){}})};
+const EN={ttl:"🌍 Fix the World",intro:"17 goals, 17 broken places. Match problems to solutions, then make a real-world decision. The land turns green as you fix it.",share:"📤 Share my score card",reset:"Reset progress",back:"← Map",bStory:"📖 2050 Story",bCalc:"🧮 My Impact",bCls:"👥 Class Mode"};
+const TR={es:{ttl:"🌍 Arregla el mundo",intro:"17 objetivos, 17 lugares rotos. Une problemas con soluciones y toma decisiones reales. La tierra se vuelve verde al arreglarlos.",share:"📤 Compartir mi puntuación",reset:"Reiniciar progreso",back:"← Mapa",bStory:"📖 Historia 2050",bCalc:"🧮 Mi impacto",bCls:"👥 Modo clase"},hi:{ttl:"🌍 दुनिया को ठीक करो",intro:"17 लक्ष्य, 17 बिगड़ी जगहें। समस्याओं को समाधान से मिलाओ और असली फ़ैसले लो।",share:"📤 मेरा स्कोर शेयर करें",reset:"प्रगति रीसेट करें",back:"← नक्शा",bStory:"📖 2050 की कहानी",bCalc:"🧮 मेरा असर",bCls:"👥 क्लास मोड"},fr:{ttl:"🌍 Réparez le monde",intro:"17 objectifs, 17 lieux en difficulté. Associez problèmes et solutions, puis prenez de vraies décisions.",share:"📤 Partager mon score",reset:"Réinitialiser",back:"← Carte",bStory:"📖 Histoire 2050",bCalc:"🧮 Mon impact",bCls:"👥 Mode classe"}};
+function setLang(c){const d={...EN,...(TR[c]||{})};for(const k in d){const e=$(k);if(e)e.textContent=d[k]}$("tback").textContent=d.back;$("lang").value=c;try{localStorage.setItem("ftwl",c)}catch(e){}}
+function getLang(){try{return localStorage.getItem("ftwl")||"en"}catch(e){return"en"}}
+$("lang").onchange=e=>setLang(e.target.value);
+function tool(h){$("toolBody").innerHTML=h;show("toolScreen")}
+$("tback").onclick=()=>show("mapScreen");
+function story(){const n=Object.keys(done).length,d=i=>done[i];
+ const S=[d(5)?"💧 2030: Clean water reaches millions and fewer children fall sick.":"🏜️ 2030: Water shortages spread and wells run dry.",
+ d(1)?"🌾 2035: Less food is wasted and harvests survive droughts.":"🥀 2035: Food waste and failed harvests push prices up.",
+ d(12)?"🌳 2040: Cities run on clean energy and heatwaves ease.":"🔥 2040: Heatwaves and floods hit cities harder every year.",
+ d(3)?"🏫 2045: A generation finishes school and invents new solutions.":"📉 2045: Millions of children still miss out on school.",
+ n===17?"🌍 2050: A thriving, fairer planet. You fixed it.":n>=12?"🌱 2050: Most goals are met, with a few gaps left to close.":n>=6?"⚖️ 2050: A world in transition. Progress is real but uneven.":"🌡️ 2050: A hotter, more divided world. It is not too late to change it."];
+ tool(`<h2>📖 Your 2050 story</h2><p class="mut">Built from the ${n} goal${n===1?"":"s"} you fixed. Fix more and replay it.</p>${S.map(x=>`<div class="card">${x}</div>`).join("")}`)}
+function calc(){tool(`<h2>🧮 My yearly impact</h2><p class="mut">Rough estimates of what you could save with greener habits.</p>
+ <div class="card">🚿 Shower: <b id="o1">10</b> min<input type="range" id="c1" min="3" max="20" value="10" style="width:100%"></div>
+ <div class="card">🥩 Meat meals per week: <b id="o2">10</b><input type="range" id="c2" min="0" max="21" value="10" style="width:100%"></div>
+ <div class="card">🚗 Commute<select id="c3" class="opt"><option value="0">Car</option><option value="1">Public transit</option><option value="2">Bike or walk</option></select></div>
+ <div class="card" id="res"></div>`);
+ const f=()=>{const a=+$("c1").value,m=+$("c2").value,c=+$("c3").value;$("o1").textContent=a;$("o2").textContent=m;
+  const w=Math.max(0,a-5)*9*365,co=Math.max(0,m-3)*2.5*52+[0,200,375][c];
+  $("res").innerHTML=`<b>Switching to a 5-min shower, 3 meat meals a week and a car-free commute could save:</b><br>💧 about ${w.toLocaleString()} litres of water a year<br>🌫️ about ${Math.round(co)} kg of CO₂ a year (≈ ${Math.round(co/21)} trees' yearly absorption)`};
+ ["c1","c2","c3"].forEach(i=>$(i).oninput=f);f()}
+async function cls(){let db=null,u=null;try{db=await claude.use("db");u=await claude.use("user")}catch(e){}
+ if(!db||!u){tool(`<h2>👥 Class mode</h2><p class="mut">Class mode needs the page opened while signed in to claude.ai. Open the shared link and try again.</p>`);return}
+ const id=await u.id();
+ tool(`<h2>👥 Class mode</h2><p class="mut">Pick a class code and a nickname. Everyone using the same code shares one leaderboard.</p><input id="cc" class="opt" placeholder="Class code (e.g. ROOM7)" maxlength="12"><input id="cn" class="opt" placeholder="Nickname" maxlength="16"><button class="btn" id="cj">Join and post my score</button><div id="lb" style="margin-top:12px"></div>`);
+ $("cj").onclick=async()=>{const code=$("cc").value.trim().toUpperCase().replace(/[^A-Z0-9]/g,""),nm=$("cn").value.trim().slice(0,16)||"Player";if(!code)return;
+  try{await db.doc("classes/"+code+"/players/"+id).set({name:nm,score,fixed:Object.keys(done).length});
+   db.collection("classes/"+code+"/players").orderBy("score","desc").limit(10).onSnapshot(s=>{const lb=$("lb");if(!lb)return;lb.innerHTML="<h3>🏆 Class "+code+"</h3>";
+    s.docs.forEach((x,i)=>{const v=x.data(),r=document.createElement("div");r.className="card";r.style.margin="6px 0";r.textContent=(i+1)+". "+v.name+" · "+v.score+" pts · "+v.fixed+"/17 goals"+(x.id===id?" (you)":"");lb.appendChild(r)})},()=>{})}
+  catch(e){$("lb").textContent="Could not join. Your account may be view-only on this page."}}}
+$("bStory").onclick=story;$("bCalc").onclick=calc;$("bCls").onclick=cls;
+function info(i){const l=L[i],c=$("info");c.classList.remove("hide");
+ c.innerHTML=`<span class="tag">SDG ${l[0]}</span> <b>${l[1]}</b> · ${l[2]}${done[i]?" ✅":""}<p class="mut">${l[5]}</p><p class="mut">🔗 Linked goals: SDG ${LINKS.filter(k=>k.includes(l[0])).map(k=>k[0]===l[0]?k[1]:k[0]).join(", ")}</p><button class="btn" id="go">${done[i]?"Play again":"Fix this place →"}</button>`;
+ $("go").onclick=()=>play(i)}
+view();drawMap();setLang(getLang());
+</script></body></html>
